@@ -15,6 +15,8 @@ def get_ethereum_price():
     url = f"https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD&api_key={API_KEY}"
     response = requests.get(url)
     data = response.json()
+    with open('./data1.json','w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
     return data['USD']
 
 def get_historical_ethereum_prices(days):
@@ -34,7 +36,7 @@ def get_historical_ethereum_prices(days):
         else:
             messagebox.showerror("Error", "데이터를 가져오는 데 오류가 발생했습니다.")
             return []
-    with open('./data.json','w') as f:
+    with open('./data2.json','w') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
     return historical_data
