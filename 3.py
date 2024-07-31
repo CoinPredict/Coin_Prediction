@@ -1,41 +1,57 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
 import datetime
+import pandas as pd
 import matplotlib.font_manager as fm
 
-
+# 폰트 설정
 font_path = "C:/Windows/Fonts/malgun.ttf"  # Malgun Gothic 폰트 경로
 font_prop = fm.FontProperties(fname=font_path, size=12)
 
+def get_date_range(days):
+    """지정된 일수만큼의 날짜 범위를 반환합니다."""
+    end_date = datetime.datetime.now()
+    start_date = end_date - datetime.timedelta(days=days)
+    return start_date, end_date
 
-# 이더리움 데이터 다운로드
-def get_ethereum_price_data(period='1d', interval='1m'):
-    # 이더리움의 Yahoo Finance 티커
+def get_ethereum_price_data(start_date, end_date, interval='1d'):
+    """주어진 날짜 범위에 대한 이더리움 가격 데이터를 가져옵니다."""
     eth = yf.Ticker("ETH-USD")
-    
-    # 가격 데이터 다운로드
-    data = eth.history(period=period, interval=interval)
+    data = eth.history(start=start_date, end=end_date, interval=interval)
     return data
 
-# 가격 데이터를 가져오고 시각화
-def plot_price_data():
-    # 데이터 가져오기
-    eth_data = get_ethereum_price_data()
-
+def plot_moving_averages_with_range(days):
+    """지정된 범위에서 이더리움 가격과 이동 평균을 시각화합니다."""
+    # 60일 전 데이터 범위 가져오기
+    start_date, end_date = get_date_range(days * 2)
     
-    if not eth_data.empty:
-        # 그래프 그리기
-        plt.figure(figsize=(10, 5))
-        plt.plot(eth_data.index, eth_data['Close'], label='이더리움 가격', color='blue')
-        plt.title('이더리움 분 단위 가격 변동', fontproperties=font_prop)
-        plt.xlabel('시간', fontproperties=font_prop)
-        plt.ylabel('가격 (USD)', fontproperties=font_prop)
-        plt.xticks(rotation=45, fontproperties=font_prop)
-        plt.legend(prop=font_prop)
-        plt.tight_layout()
-        plt.show()
-    else:
+    # 가격 데이터 가져오기
+    eth_data = get_ethereum_price_data(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+
+    if eth_data.empty:
         print("데이터를 가져오는 데 실패했습니다.")
+        return
+
+    # 이동 평균 계산
+    eth_data['MA30'] = eth_data['Close'].rolling(window=30).mean()
+    eth_data['MA60'] = eth_data['Close'].rolling(window=60).mean()
+
+    # 최근 30일 데이터만 선택
+    recent_data = eth_data[-days:]
+
+    # 시각화
+    plt.figure(figsize=(12, 6))
+    plt.plot(recent_data.index, recent_data['Close'], label='ETH-USD (Last 30 Days)', color='blue')
+    plt.plot(recent_data.index, recent_data['MA30'].iloc[-days:], label='30-Day Moving Average', color='orange', linestyle='--')
+    plt.plot(recent_data.index, eth_data['MA60'].iloc[-days:], label='60-Day Moving Average', color='green', linestyle='--')  # 전체 60일 이동 평균선
+    plt.title('Ethereum Price with Moving Averages (Last {} Days)'.format(days), fontproperties=font_prop)
+    plt.xlabel('Date', fontproperties=font_prop)
+    plt.ylabel('Price (USD)', fontproperties=font_prop)
+    plt.xticks(rotation=45, fontproperties=font_prop)
+    plt.legend(prop=font_prop)
+    plt.tight_layout()
+    plt.show()
 
 # 실행
-plot_price_data()
+if __name__ == "__main__":
+    plot_moving_averages_with_range(days=30)  # 최근 30일간의 가격 데이터 및 이동 평균 시각화
