@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import messagebox
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import json
 
 font_path = "C:/Windows/Fonts/malgun.ttf"  # Malgun Gothic 폰트 경로
 font_prop = fm.FontProperties(fname=font_path, size=12)
@@ -21,7 +22,7 @@ def get_historical_ethereum_prices(days):
     limit = 2000
     historical_data = []
     total_minutes = days * 24 * 60
-
+    
     for i in range(0, total_minutes, limit):
         url = f"https://min-api.cryptocompare.com/data/v2/histominute?fsym=ETH&tsym=USD&limit={min(limit, total_minutes - i)}&toTs={to_ts}&api_key={API_KEY}"
         response = requests.get(url)
@@ -33,6 +34,8 @@ def get_historical_ethereum_prices(days):
         else:
             messagebox.showerror("Error", "데이터를 가져오는 데 오류가 발생했습니다.")
             return []
+    with open('./data.json','w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
     return historical_data
 
