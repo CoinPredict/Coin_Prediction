@@ -54,15 +54,18 @@ def plot_moving_averages_with_range(days):
 
     # 자기상관성 플롯
     lags = min(30, len(recent_data) - 1)  # lags 값 조정
-    plt.figure(figsize=(12, 6))
-    plot_acf(recent_data['Close'], lags=lags, zero=False)
-    plt.title('Autocorrelation of Ethereum Prices (Last {} Days)'.format(days), fontproperties=font_prop)
-    plt.xlabel('Lag', fontproperties=font_prop)
-    plt.ylabel('Autocorrelation', fontproperties=font_prop)
-    plt.xticks(fontproperties=font_prop)
-    plt.yticks(fontproperties=font_prop)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    plot_acf(recent_data['Close'], lags=lags, zero=False, ax=ax)
+    ax.set_title('Autocorrelation of Ethereum Prices (Last {} Days)'.format(days), fontproperties=font_prop)
+    ax.set_xlabel('Lag', fontproperties=font_prop)
+    ax.set_ylabel('Autocorrelation', fontproperties=font_prop)
+    
+    # x축과 y축의 폰트를 설정
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_fontproperties(font_prop)
+    
     plt.show()
 
 # 실행
 if __name__ == "__main__":
-    plot_moving_averages_with_range(days=60)  # 최근 30일간의 가격 데이터 및 이동 평균 시각화
+    plot_moving_averages_with_range(days=30)  # 최근 30일간의 가격 데이터 및 이동 평균 시각화
