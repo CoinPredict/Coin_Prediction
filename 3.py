@@ -1,8 +1,8 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
 import datetime
-import pandas as pd
 import matplotlib.font_manager as fm
+from statsmodels.graphics.tsaplots import plot_acf
 
 # 폰트 설정
 font_path = "C:/Windows/Fonts/malgun.ttf"  # Malgun Gothic 폰트 경로
@@ -21,9 +21,9 @@ def get_ethereum_price_data(start_date, end_date, interval='1d'):
     return data
 
 def plot_moving_averages_with_range(days):
-    """지정된 범위에서 이더리움 가격과 이동 평균을 시각화합니다."""
-    # 60일 전 데이터 범위 가져오기
-    start_date, end_date = get_date_range(days * 2)
+    """지정된 범위에서 이더리움 가격과 이동 평균을 시각화하고 자기상관성을 플롯합니다."""
+    # 90일 전 데이터 범위 가져오기 (60일 이동 평균 계산을 위해 충분한 데이터 확보)
+    start_date, end_date = get_date_range(days + 60)
     
     # 가격 데이터 가져오기
     eth_data = get_ethereum_price_data(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
@@ -42,8 +42,8 @@ def plot_moving_averages_with_range(days):
     # 시각화
     plt.figure(figsize=(12, 6))
     plt.plot(recent_data.index, recent_data['Close'], label='ETH-USD (Last 30 Days)', color='blue')
-    plt.plot(recent_data.index, recent_data['MA30'].iloc[-days:], label='30-Day Moving Average', color='orange', linestyle='--')
-    plt.plot(recent_data.index, eth_data['MA60'].iloc[-days:], label='60-Day Moving Average', color='green', linestyle='--')  # 전체 60일 이동 평균선
+    plt.plot(recent_data.index, recent_data['MA30'], label='30-Day Moving Average', color='orange', linestyle='--')
+    plt.plot(recent_data.index, recent_data['MA60'], label='60-Day Moving Average', color='green', linestyle='--')  # 전체 60일 이동 평균선
     plt.title('Ethereum Price with Moving Averages (Last {} Days)'.format(days), fontproperties=font_prop)
     plt.xlabel('Date', fontproperties=font_prop)
     plt.ylabel('Price (USD)', fontproperties=font_prop)
@@ -52,6 +52,17 @@ def plot_moving_averages_with_range(days):
     plt.tight_layout()
     plt.show()
 
+    # 자기상관성 플롯
+    lags = min(30, len(recent_data) - 1)  # lags 값 조정
+    plt.figure(figsize=(12, 6))
+    plot_acf(recent_data['Close'], lags=lags, zero=False)
+    plt.title('Autocorrelation of Ethereum Prices (Last {} Days)'.format(days), fontproperties=font_prop)
+    plt.xlabel('Lag', fontproperties=font_prop)
+    plt.ylabel('Autocorrelation', fontproperties=font_prop)
+    plt.xticks(fontproperties=font_prop)
+    plt.yticks(fontproperties=font_prop)
+    plt.show()
+
 # 실행
 if __name__ == "__main__":
-    plot_moving_averages_with_range(days=30)  # 최근 30일간의 가격 데이터 및 이동 평균 시각화
+    plot_moving_averages_with_range(days=60)  # 최근 30일간의 가격 데이터 및 이동 평균 시각화
